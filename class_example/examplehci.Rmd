@@ -1,0 +1,176 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+loading the dataset
+
+```{r}
+install.packages("readxl")
+library(readxl)
+# Replace "path/to/your/file.xlsx" with the actual file path
+data <- read_excel("~/Downloads/mudkip_ftw.xlsx", sheet = "Sheet1")
+head(data)
+colnames(data)
+
+
+```
+
+```{r}
+install.packages("ggplot2")
+library(ggplot2)
+```
+
+```{r}
+
+ggplot(data, aes(x = playtime_hours, fill = group)) + 
+  geom_histogram(alpha = 0.5, position = "identity", bins = 20) +
+  theme_minimal() + 
+  labs(title = "Distribution of Playtime Hours by Starter Group", x = "Playtime Hours", y = "Frequency")
+
+
+```
+
+```{r}
+# Histogram for satisfaction_rating by group
+ggplot(data, aes(x = satisfaction_rating, fill = group)) + 
+  geom_histogram(alpha = 0.5, position = "identity", bins = 20) +
+  theme_minimal() + 
+  labs(title = "Distribution of Satisfaction Rating by Starter Group", x = "Satisfaction Rating", y = "Frequency")
+```
+
+shpiro-wilk test to be sure its normal (has to be on numeric data)
+
+```{r}
+# shapir-Wilk test for group A
+# Shapiro-Wilk test for playtime_hours
+shapiro_playtime <- shapiro.test(data$playtime_hours)
+print(shapiro_playtime)
+
+# Shapiro-Wilk test for satisfaction_rating
+shapiro_satisfaction <- shapiro.test(data$satisfaction_rating)
+print(shapiro_satisfaction)
+
+```
+
+```{r}
+# Load the necessary library
+library(ggplot2)
+
+# Histogram for Playtime Hours
+ggplot(data, aes(x = playtime_hours)) +
+  geom_histogram(binwidth = 1, fill = "skyblue", color = "black", alpha = 0.7) +
+  labs(title = "Distribution of Playtime Hours", x = "Playtime Hours", y = "Frequency") +
+  theme_minimal()
+
+# Histogram for Satisfaction Rating
+ggplot(data, aes(x = satisfaction_rating)) +
+  geom_histogram(binwidth = 0.5, fill = "lightgreen", color = "black", alpha = 0.7) +
+  labs(title = "Distribution of Satisfaction Rating", x = "Satisfaction Rating", y = "Frequency") +
+  theme_minimal()
+
+```
+
+```{r}
+# Q-Q plot for Playtime Hours
+qqnorm(data$playtime_hours, main = "Q-Q Plot for Playtime Hours")
+qqline(data$playtime_hours, col = "red")
+
+# Q-Q plot for Satisfaction Rating
+qqnorm(data$satisfaction_rating, main = "Q-Q Plot for Satisfaction Rating")
+qqline(data$satisfaction_rating, col = "red")
+
+```
+
+its significant so its not normal, running **non-parametric tests** that do not rely on the assumption of normality.
+
+```{r}
+# Kruskal-Wallis test for playtime_hours across groups
+kruskal_playtime <- kruskal.test(playtime_hours ~ group, data = data)
+print(kruskal_playtime)
+
+# Kruskal-Wallis test for satisfaction_rating across groups
+kruskal_satisfaction <- kruskal.test(satisfaction_rating ~ group, data = data)
+print(kruskal_satisfaction)
+
+```
+
+```{r}
+# Boxplot for Playtime Hours across groups
+ggplot(data, aes(x = group, y = playtime_hours, fill = group)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Playtime Hours by Group", x = "Group", y = "Playtime Hours") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set3") # You can change the color palette if desired
+
+```
+
+```{r}
+# Boxplot for Satisfaction Rating across groups
+ggplot(data, aes(x = group, y = satisfaction_rating, fill = group)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Satisfaction Rating by Group", x = "Group", y = "Satisfaction Rating") +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set3") # Again, customize color palette if preferred
+
+```
+
+The null hypothesis for the test is that the distribution of the variable is the same across all groups. If the p-value is less than 0.05, you can reject the null hypothesis, indicating a significant difference between the groups.
+
+post hoc test :\
+Pairwise MWU tests with Bonferroni Correction or Holm-Bonferroni Correction (unpaired)
+
+```{r}
+# Install the 'dunn.test' package for the post-hoc pairwise Wilcoxon test
+install.packages("dunn.test")
+library(dunn.test)
+```
+
+```{r}
+library(dunn.test)
+# Perform Dunn's Test for playtime_hours across groups
+dunn_playtime <- dunn.test(data$playtime_hours, data$group, kw = TRUE, label = TRUE, list = TRUE)
+print(dunn_playtime)
+
+# Perform Dunn's Test for satisfaction_rating across groups
+dunn_satisfaction <- dunn.test(data$satisfaction_rating, data$group, kw = TRUE, label = TRUE, list = TRUE)
+print(dunn_satisfaction)
+
+```
+
+```{r}
+# Load necessary library
+library(ggplot2)
+
+# Boxplot for Playtime Hours by Group
+ggplot(data, aes(x = group, y = playtime_hours, fill = group)) + 
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Playtime Hours by Starter Pokémon", 
+       x = "Starter Pokémon", 
+       y = "Playtime (hours)") +
+  scale_fill_brewer(palette = "Set2")
+
+
+```
+
+```{r}
+# Boxplot for Satisfaction Rating by Group
+ggplot(data, aes(x = group, y = satisfaction_rating, fill = group)) + 
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Satisfaction Rating by Starter Pokémon", 
+       x = "Starter Pokémon", 
+       y = "Satisfaction Rating (1-7)") +
+  scale_fill_brewer(palette = "Set2")
+```
+
+-   
+
+    **For Playtime Hours**:
+
+    There are significant differences between the groups **Mudkip**, **Torchic**, and **Treecko** for **playtime hours**. Specifically, **Mudkip** is significantly different from both **Torchic** and **Treecko** in terms of playtime, while there is no significant difference between **Torchic** and **Treecko**.
+
+    **For Satisfaction Rating**:
+
+    There are significant differences in **satisfaction ratings** between **Mudkip** and **Treecko**, as well as **Torchic** and **Treecko**. However, **Mudkip** and **Torchic** do not show a significant difference in satisfaction ratings.
